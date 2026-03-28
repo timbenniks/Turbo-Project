@@ -1,9 +1,12 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+
+const TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 export function linkVercelProject(projectDir: string): void {
-  execSync("vercel link --yes", {
+  execFileSync("vercel", ["link", "--yes"], {
     cwd: projectDir,
     stdio: "inherit",
+    timeout: TIMEOUT,
   });
 }
 
@@ -11,15 +14,17 @@ export function addNeonIntegration(
   projectDir: string,
   projectName: string
 ): void {
-  execSync(`vercel integration add neon --name ${projectName}-db`, {
+  execFileSync("vercel", ["integration", "add", "neon", "--name", `${projectName}-db`], {
     cwd: projectDir,
     stdio: "inherit",
+    timeout: TIMEOUT,
   });
 }
 
 export function pullEnvVars(projectDir: string): void {
-  execSync("vercel env pull .env.local", {
+  execFileSync("vercel", ["env", "pull", ".env.local"], {
     cwd: projectDir,
     stdio: "inherit",
+    timeout: TIMEOUT,
   });
 }

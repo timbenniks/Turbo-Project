@@ -1,6 +1,8 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+
+const TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 const drizzleConfig = `import { defineConfig } from "drizzle-kit";
 
@@ -28,14 +30,16 @@ const schemaStarter = `import { pgTable, serial, text, timestamp } from "drizzle
 `;
 
 export function setupDrizzle(projectDir: string): void {
-  execSync("npm install drizzle-orm @neondatabase/serverless", {
+  execFileSync("npm", ["install", "drizzle-orm", "@neondatabase/serverless"], {
     cwd: projectDir,
     stdio: "inherit",
+    timeout: TIMEOUT,
   });
 
-  execSync("npm install -D drizzle-kit", {
+  execFileSync("npm", ["install", "-D", "drizzle-kit"], {
     cwd: projectDir,
     stdio: "inherit",
+    timeout: TIMEOUT,
   });
 
   writeFileSync(path.join(projectDir, "drizzle.config.ts"), drizzleConfig);

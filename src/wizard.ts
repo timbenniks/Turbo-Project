@@ -25,8 +25,9 @@ export async function runWizard(options: WizardOptions): Promise<WizardResult> {
               placeholder: "my-awesome-app",
               validate: (value) => {
                 if (!value.trim()) return "Project name is required";
-                if (!/^[a-z0-9-]+$/.test(value))
-                  return "Use lowercase letters, numbers, and dashes only";
+                if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(value) && !/^[a-z0-9]$/.test(value))
+                  return "Use lowercase letters, numbers, and dashes (cannot start/end with dash)";
+                if (value.length > 100) return "Name too long (max 100 characters)";
               },
             }),
 
@@ -38,6 +39,11 @@ export async function runWizard(options: WizardOptions): Promise<WizardResult> {
               placeholder: "b5KJfbd9k",
               defaultValue: "b5KJfbd9k",
               initialValue: options.preset ?? "b5KJfbd9k",
+              validate: (value) => {
+                if (!value.trim()) return "Preset ID is required";
+                if (!/^[a-zA-Z0-9_-]+$/.test(value))
+                  return "Preset ID should only contain letters, numbers, dashes, and underscores";
+              },
             }),
 
       createGitHubRepo: ({ results }) =>

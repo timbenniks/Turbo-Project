@@ -1,4 +1,6 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { rmSync } from "node:fs";
+import path from "node:path";
 import * as p from "@clack/prompts";
 import type { WizardResult } from "./wizard.js";
 import { runScaffold } from "./scaffold.js";
@@ -10,15 +12,18 @@ import { writeProjectReadme } from "./readme.js";
 
 export async function runSteps(result: WizardResult): Promise<string> {
   const s = p.spinner();
+  const projectDir = path.resolve(process.cwd(), result.projectName);
 
   // Step 1: Scaffold
   s.start("Scaffolding Next.js project with shadcn/ui...");
-  let projectDir: string;
   try {
-    projectDir = runScaffold(result.projectName, result.preset);
+    runScaffold(result.projectName, result.preset);
     s.stop("Project scaffolded.");
   } catch (error) {
     s.stop("Scaffolding failed.");
+    try {
+      rmSync(projectDir, { recursive: true, force: true });
+    } catch {}
     p.log.error(
       `shadcn init failed. Make sure the preset ID "${result.preset}" is valid.`
     );
@@ -117,14 +122,15 @@ export async function runSteps(result: WizardResult): Promise<string> {
   // Step 9: Final commit
   s.start("Committing documentation...");
   try {
-    execSync("git add -A", { cwd: projectDir, stdio: "ignore" });
-    execSync('git commit -m "Add AGENTS.md, README.md, and Drizzle config"', {
+    execFileSync("git", ["add", "-A"], { cwd: projectDir, stdio: "ignore", timeout: 30_000 });
+    execFileSync("git", ["commit", "-m", "Add AGENTS.md, README.md, and Drizzle config"], {
       cwd: projectDir,
       stdio: "ignore",
+      timeout: 30_000,
     });
 
     if (result.createGitHubRepo) {
-      execSync("git push", { cwd: projectDir, stdio: "ignore" });
+      execFileSync("git", ["push"], { cwd: projectDir, stdio: "ignore", timeout: 60_000 });
     }
 
     s.stop("Final commit pushed.");
