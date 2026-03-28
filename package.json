@@ -1,0 +1,39 @@
+{
+  "name": "@timbenniks/turbo-project",
+  "version": "0.1.0",
+  "description": "A whimsical CLI that scaffolds your full-stack project in one command",
+  "type": "module",
+  "bin": {
+    "turbo-project": "./dist/bin/turbo-project.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "cli",
+    "scaffold",
+    "nextjs",
+    "drizzle",
+    "neon",
+    "vercel",
+    "shadcn"
+  ],
+  "author": "Tim Benniks",
+  "license": "MIT",
+  "dependencies": {
+    "@clack/prompts": "^0.10.0",
+    "boxen": "^8.0.1",
+    "commander": "^13.1.0",
+    "gradient-string": "^3.0.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/gradient-string": "^1.1.6",
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist"
+  ]
+}
