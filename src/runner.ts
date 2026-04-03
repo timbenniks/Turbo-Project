@@ -5,12 +5,17 @@ import * as p from "@clack/prompts";
 import type { WizardResult } from "./wizard.js";
 import { runScaffold } from "./scaffold.js";
 import { setupDrizzle } from "./drizzle.js";
-import { initGit, createGitHubRepo } from "./git.js";
+import { initGit, createGitHubRepo, getGitHubUsername } from "./git.js";
 import { linkVercelProject, addNeonIntegration, pullEnvVars } from "./vercel.js";
 import { writeAgentsMd } from "./agents.js";
 import { writeProjectReadme } from "./readme.js";
 
-export async function runSteps(result: WizardResult): Promise<string> {
+export interface RunResult {
+  projectDir: string;
+  gitHubUrl: string | null;
+}
+
+export async function runSteps(result: WizardResult): Promise<RunResult> {
   const s = p.spinner();
   const projectDir = path.resolve(process.cwd(), result.projectName);
 
@@ -54,10 +59,13 @@ export async function runSteps(result: WizardResult): Promise<string> {
   }
 
   // Step 4: GitHub repo
+  let gitHubUrl: string | null = null;
   if (result.createGitHubRepo) {
     s.start(`Creating ${result.repoVisibility} GitHub repo...`);
     try {
       createGitHubRepo(projectDir, result.projectName, result.repoVisibility);
+      const username = getGitHubUsername();
+      gitHubUrl = username ? `https://github.com/${username}/${result.projectName}` : null;
       s.stop("GitHub repo created and pushed.");
     } catch (error) {
       s.stop("GitHub repo creation failed.");
@@ -139,5 +147,5 @@ export async function runSteps(result: WizardResult): Promise<string> {
     p.log.warn("Could not create final commit. You can commit manually.");
   }
 
-  return projectDir;
+  return { projectDir, gitHubUrl };
 }

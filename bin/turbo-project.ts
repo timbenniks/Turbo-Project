@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { Command } from "commander";
 import * as p from "@clack/prompts";
 import { showBanner } from "../src/banner.js";
 import { runPreflight } from "../src/preflight.js";
 import { runWizard } from "../src/wizard.js";
 import { runSteps } from "../src/runner.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "../../package.json"), "utf-8"));
 
 const program = new Command();
 
@@ -14,7 +20,7 @@ program
   .description(
     "A whimsical CLI that scaffolds your full-stack project in one command"
   )
-  .version("0.1.0")
+  .version(pkg.version)
   .option("-n, --name <name>", "Project name")
   .option(
     "-p, --preset <id>",
@@ -34,12 +40,12 @@ program
       ghAvailable,
     });
 
-    const projectDir = await runSteps(result);
+    const { gitHubUrl } = await runSteps(result);
 
     p.note(
       [
         `Project:     ${result.projectName}`,
-        `GitHub:      ${result.createGitHubRepo ? `https://github.com/${result.projectName}` : "skipped"}`,
+        `GitHub:      ${gitHubUrl ?? "skipped"}`,
         `Vercel:      linked`,
         `Database:    Neon (provisioned)`,
         `Env vars:    .env.local`,

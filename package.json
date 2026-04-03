@@ -8,7 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "postbuild": "chmod +x dist/bin/turbo-project.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "cli",
@@ -21,6 +23,17 @@
   ],
   "author": "Tim Benniks",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timbenniks/Turbo-Project.git"
+  },
+  "homepage": "https://github.com/timbenniks/Turbo-Project#readme",
+  "bugs": {
+    "url": "https://github.com/timbenniks/Turbo-Project/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
     "boxen": "^8.0.1",
