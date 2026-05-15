@@ -1,39 +1,31 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import type { WizardResult } from "./wizard.js";
+
+type ReadmeOptions = Pick<
+  WizardResult,
+  "setupDrizzle" | "provisionNeon" | "linkVercel"
+>;
 
 export function writeProjectReadme(
   projectDir: string,
-  projectName: string
+  projectName: string,
+  options: ReadmeOptions
 ): void {
-  const content = `# ${projectName}
+  const stackRows = [
+    "| Framework | Next.js 16 |",
+    "| Language | TypeScript |",
+    "| Styling | Tailwind CSS v4 |",
+    "| Components | shadcn/ui |",
+    options.setupDrizzle ? "| ORM | Drizzle |" : null,
+    options.provisionNeon ? "| Database | Neon (serverless Postgres) |" : null,
+    options.linkVercel ? "| Hosting | Vercel |" : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-Built with [turbo-project](https://github.com/timbenniks/Turbo-Project).
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| Components | shadcn/ui |
-| ORM | Drizzle |
-| Database | Neon (serverless Postgres) |
-| Hosting | Vercel |
-
-## Getting Started
-
-\`\`\`bash
-# Install dependencies
-npm install
-
-# Start the dev server
-npm run dev
-\`\`\`
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Database
+  const database = options.setupDrizzle
+    ? `## Database
 
 \`\`\`bash
 # Generate migrations after schema changes
@@ -50,11 +42,39 @@ npx drizzle-kit studio
 \`\`\`
 
 Schema definitions live in \`db/schema.ts\`.
+`
+    : "";
 
-## Deployment
+  const deployment = options.linkVercel
+    ? `## Deployment
 
 Deployed automatically via Vercel on push to main.
-`;
+`
+    : "";
+
+  const content = `# ${projectName}
+
+Built with [turbo-project](https://github.com/timbenniks/Turbo-Project).
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+${stackRows}
+
+## Getting Started
+
+\`\`\`bash
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+\`\`\`
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+${database}${deployment}`;
 
   writeFileSync(path.join(projectDir, "README.md"), content);
 }

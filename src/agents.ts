@@ -1,34 +1,51 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import type { WizardResult } from "./wizard.js";
 
-export function writeAgentsMd(projectDir: string, projectName: string): void {
-  const content = `# AGENTS.md
+type AgentsOptions = Pick<
+  WizardResult,
+  "setupDrizzle" | "provisionNeon" | "linkVercel"
+>;
 
-This file describes the project setup for LLM coding assistants.
+export function writeAgentsMd(
+  projectDir: string,
+  projectName: string,
+  options: AgentsOptions
+): void {
+  const stack = [
+    "- **Framework:** Next.js 16 (App Router)",
+    "- **Language:** TypeScript",
+    "- **Styling:** Tailwind CSS v4",
+    "- **Components:** shadcn/ui primitives",
+    options.setupDrizzle ? "- **ORM:** Drizzle ORM" : null,
+    options.provisionNeon
+      ? "- **Database:** Neon (serverless Postgres), connected via Vercel integration"
+      : null,
+    options.linkVercel ? "- **Hosting:** Vercel" : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-## Tech Stack
+  const structure = [
+    "- `app/` - Next.js App Router pages and layouts",
+    "- `components/` - shadcn/ui and custom components",
+    options.setupDrizzle ? "- `db/schema.ts` - Drizzle ORM schema definitions" : null,
+    options.setupDrizzle ? "- `drizzle.config.ts` - Drizzle Kit configuration" : null,
+    options.provisionNeon ? "- `.env.local` - Environment variables (DATABASE_URL, etc.)" : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
-- **Framework:** Next.js 16 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS v4
-- **Components:** shadcn/ui primitives
-- **ORM:** Drizzle ORM
-- **Database:** Neon (serverless Postgres), connected via Vercel integration
-- **Hosting:** Vercel
-
-## Project Structure
-
-- \`app/\` — Next.js App Router pages and layouts
-- \`components/\` — shadcn/ui and custom components
-- \`db/schema.ts\` — Drizzle ORM schema definitions
-- \`drizzle.config.ts\` — Drizzle Kit configuration
-- \`.env.local\` — Environment variables (DATABASE_URL, etc.)
-
-## Database
+  const database = options.setupDrizzle
+    ? `## Database
 
 ### Connection
 
-The database connection string is stored in the \`DATABASE_URL\` environment variable. It is automatically set by the Vercel + Neon integration and pulled to \`.env.local\` for local development.
+The database connection string is stored in the \`DATABASE_URL\` environment variable.${
+        options.provisionNeon
+          ? " It is set by the Vercel + Neon integration and pulled to `.env.local` for local development."
+          : ""
+      }
 
 The Neon serverless driver (\`@neondatabase/serverless\`) is installed for use with Drizzle ORM.
 
@@ -49,40 +66,41 @@ export const users = pgTable("users", {
 
 ### Migrations
 
-Generate migrations after changing the schema:
-
 \`\`\`bash
 npx drizzle-kit generate
-\`\`\`
-
-Apply migrations to the database:
-
-\`\`\`bash
 npx drizzle-kit migrate
-\`\`\`
-
-Push schema changes directly (development only):
-
-\`\`\`bash
 npx drizzle-kit push
-\`\`\`
-
-Open Drizzle Studio to browse the database:
-
-\`\`\`bash
 npx drizzle-kit studio
 \`\`\`
+`
+    : "";
 
-## Development
+  const deployment = options.linkVercel
+    ? `## Deployment
+
+The project is deployed automatically via Vercel on push to the main branch.
+`
+    : "";
+
+  const content = `# AGENTS.md
+
+This file describes the project setup for LLM coding assistants.
+
+## Tech Stack
+
+${stack}
+
+## Project Structure
+
+${structure}
+
+${database}## Development
 
 \`\`\`bash
 npm run dev
 \`\`\`
 
-## Deployment
-
-The project is deployed automatically via Vercel on push to the main branch.
-`;
+${deployment}`;
 
   writeFileSync(path.join(projectDir, "AGENTS.md"), content);
 }

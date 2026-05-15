@@ -1,6 +1,6 @@
 {
   "name": "@timbenniks/turbo-project",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A whimsical CLI that scaffolds your full-stack project in one command",
   "type": "module",
   "bin": {

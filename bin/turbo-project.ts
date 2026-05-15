@@ -24,32 +24,33 @@ program
   .option("-n, --name <name>", "Project name")
   .option(
     "-p, --preset <id>",
-    "shadcn/ui preset ID",
-    "b5KJfbd9k"
+    "Optional shadcn/ui preset ID. If omitted, shadcn defaults are used."
   )
   .action(async (options) => {
     showBanner();
 
     p.intro("Let's scaffold your project!");
 
-    const { ghAvailable } = runPreflight();
-
     const result = await runWizard({
       name: options.name,
       preset: options.preset,
-      ghAvailable,
     });
+
+    runPreflight(result);
 
     const { gitHubUrl } = await runSteps(result);
 
     p.note(
       [
         `Project:     ${result.projectName}`,
+        `Scaffold:    ${result.scaffoldProject ? "created" : "skipped"}`,
+        `Drizzle:     ${result.setupDrizzle ? "configured" : "skipped"}`,
+        `Git:         ${result.initGit ? "initialized" : "skipped"}`,
         `GitHub:      ${gitHubUrl ?? "skipped"}`,
-        `Vercel:      linked`,
-        `Database:    Neon (provisioned)`,
-        `Env vars:    .env.local`,
-        `Docs:        AGENTS.md, README.md`,
+        `Vercel:      ${result.linkVercel ? "linked" : "skipped"}`,
+        `Database:    ${result.provisionNeon ? "Neon provisioned" : "skipped"}`,
+        `Env vars:    ${result.pullEnvVars ? ".env.local" : "skipped"}`,
+        `Docs:        ${result.writeDocs ? "AGENTS.md, README.md" : "skipped"}`,
         "",
         `Next steps:`,
         `  cd ${result.projectName}`,

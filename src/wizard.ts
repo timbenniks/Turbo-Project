@@ -4,14 +4,21 @@ import pc from "picocolors";
 export interface WizardOptions {
   name?: string;
   preset?: string;
-  ghAvailable: boolean;
 }
 
 export interface WizardResult {
   projectName: string;
-  preset: string;
+  scaffoldProject: boolean;
+  preset?: string;
+  setupDrizzle: boolean;
+  initGit: boolean;
   createGitHubRepo: boolean;
   repoVisibility: "public" | "private";
+  linkVercel: boolean;
+  provisionNeon: boolean;
+  pullEnvVars: boolean;
+  writeDocs: boolean;
+  finalCommit: boolean;
 }
 
 export async function runWizard(options: WizardOptions): Promise<WizardResult> {
@@ -31,27 +38,44 @@ export async function runWizard(options: WizardOptions): Promise<WizardResult> {
               },
             }),
 
-      preset: () =>
-        options.preset && options.preset !== "b5KJfbd9k"
-          ? Promise.resolve(options.preset)
-          : p.text({
-              message: `shadcn/ui preset ID ${pc.dim(`(browse: https://ui.shadcn.com/create)`)}`,
-              placeholder: "b5KJfbd9k",
-              defaultValue: "b5KJfbd9k",
-              initialValue: options.preset ?? "b5KJfbd9k",
-              validate: (value) => {
-                if (!value.trim()) return "Preset ID is required";
-                if (!/^[a-zA-Z0-9_-]+$/.test(value))
-                  return "Preset ID should only contain letters, numbers, dashes, and underscores";
-              },
-            }),
+      scaffoldProject: () =>
+        p.confirm({
+          message: "Scaffold a new Next.js project with shadcn/ui?",
+          initialValue: true,
+        }),
+
+      preset: () => {
+        if (!options.preset) return Promise.resolve(undefined);
+
+        const preset = options.preset.trim();
+        if (!/^[a-zA-Z0-9_-]+$/.test(preset)) {
+          p.log.error(
+            "Preset ID should only contain letters, numbers, dashes, and underscores"
+          );
+          process.exit(1);
+        }
+
+        return Promise.resolve(preset);
+      },
+
+      setupDrizzle: () =>
+        p.confirm({
+          message: "Set up Drizzle ORM?",
+          initialValue: true,
+        }),
+
+      initGit: () =>
+        p.confirm({
+          message: "Initialize a local git repository?",
+          initialValue: true,
+        }),
 
       createGitHubRepo: ({ results }) =>
-        !options.ghAvailable
+        !results.initGit
           ? Promise.resolve(false)
           : p.confirm({
               message: `Create a GitHub repo for ${pc.cyan(results.projectName as string)}?`,
-              initialValue: true,
+              initialValue: false,
             }),
 
       repoVisibility: ({ results }) =>
@@ -65,6 +89,42 @@ export async function runWizard(options: WizardOptions): Promise<WizardResult> {
                 { value: "public" as const, label: "Public" },
               ],
             }),
+
+      linkVercel: () =>
+        p.confirm({
+          message: "Link a Vercel project?",
+          initialValue: true,
+        }),
+
+      provisionNeon: ({ results }) =>
+        !results.linkVercel
+          ? Promise.resolve(false)
+          : p.confirm({
+              message: "Provision a Neon database through Vercel?",
+              initialValue: true,
+            }),
+
+      pullEnvVars: ({ results }) =>
+        !results.linkVercel
+          ? Promise.resolve(false)
+          : p.confirm({
+              message: "Pull Vercel environment variables to .env.local?",
+              initialValue: true,
+            }),
+
+      writeDocs: () =>
+        p.confirm({
+          message: "Generate AGENTS.md and README.md?",
+          initialValue: true,
+        }),
+
+      finalCommit: ({ results }) =>
+        !results.initGit
+          ? Promise.resolve(false)
+          : p.confirm({
+              message: "Create a final commit after setup?",
+              initialValue: true,
+            }),
     },
     {
       onCancel: () => {
@@ -77,11 +137,16 @@ export async function runWizard(options: WizardOptions): Promise<WizardResult> {
   p.note(
     [
       `${pc.bold("Project:")}      ${result.projectName}`,
-      `${pc.bold("Preset:")}       ${result.preset}`,
+      `${pc.bold("Scaffold:")}     ${result.scaffoldProject ? "Yes" : "No, use existing directory"}`,
+      `${pc.bold("Preset:")}       ${result.preset ?? "shadcn defaults"}`,
+      `${pc.bold("Drizzle:")}      ${result.setupDrizzle ? "Yes" : "No"}`,
+      `${pc.bold("Git:")}          ${result.initGit ? "Yes" : "No"}`,
       `${pc.bold("GitHub repo:")}  ${result.createGitHubRepo ? `Yes (${result.repoVisibility})` : "No"}`,
-      `${pc.bold("Vercel:")}       Yes`,
-      `${pc.bold("Neon DB:")}      Yes`,
-      `${pc.bold("Drizzle ORM:")} Yes`,
+      `${pc.bold("Vercel:")}       ${result.linkVercel ? "Yes" : "No"}`,
+      `${pc.bold("Neon DB:")}      ${result.provisionNeon ? "Yes" : "No"}`,
+      `${pc.bold("Env vars:")}     ${result.pullEnvVars ? "Yes" : "No"}`,
+      `${pc.bold("Docs:")}         ${result.writeDocs ? "Yes" : "No"}`,
+      `${pc.bold("Final commit:")} ${result.finalCommit ? "Yes" : "No"}`,
     ].join("\n"),
     "Here's the plan"
   );

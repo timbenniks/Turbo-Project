@@ -16,11 +16,11 @@ export function getGitHubUsername(): string | null {
 }
 
 export function initGit(projectDir: string): void {
-  execFileSync("git", ["init"], { cwd: projectDir, stdio: "ignore", timeout: TIMEOUT });
-  execFileSync("git", ["add", "-A"], { cwd: projectDir, stdio: "ignore", timeout: TIMEOUT });
+  execFileSync("git", ["init"], { cwd: projectDir, stdio: "inherit", timeout: TIMEOUT });
+  execFileSync("git", ["add", "-A"], { cwd: projectDir, stdio: "inherit", timeout: TIMEOUT });
   execFileSync("git", ["commit", "-m", "Initial commit from turbo-project"], {
     cwd: projectDir,
-    stdio: "ignore",
+    stdio: "inherit",
     timeout: TIMEOUT,
   });
 }
